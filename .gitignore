@@ -1,0 +1,23 @@
+# Generated race-tuning state and parameters
+.race_tuner/
+demo/user/inc/race_autotune_generated.h
+
+# Keil/IAR generated outputs included in the teaching archive
+demo/mdk/Objects/
+demo/mdk/Listings/
+demo/mdk/*.log
+demo/mdk/*.dep
+demo/mdk/*.uvoptx
+demo/mdk/JLinkSettings.ini
+demo/mdk/.vscode/*.log
+demo/mdk/.vscode/*.log.lock
+demo/iar/program/Debug/
+demo/iar/program/Obj/
+demo/iar/program/List/
+demo/iar/program/settings/
+demo/iar/program/*.dep
+
+# Python caches used by host-side validation
+__pycache__/
+*.pyc
+
