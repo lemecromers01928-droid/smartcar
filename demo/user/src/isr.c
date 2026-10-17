@@ -65,19 +65,30 @@ void PIT_IRQHandler(void)
         encoder_data_2 = +encoder_get_count(ENCODER_2);
         encoder_clear_count(ENCODER_2);
 
-        // 编码器值即为速度值
-        speed_real = encoder_data_1;
-        // PID更新 
-        speed_pwm = PidLocCtrl(&speed_pid_l, speed_target - speed_real, 1.f);
-        // 只考虑一个方向转动
-        pwm_set_duty(MOTOR1_PWM, MAX(speed_pwm, 0));
+        speed_real_l = (float)encoder_data_1;
+        speed_real_r = (float)encoder_data_2;
+
+        if (car_run_enabled)
+        {
+            speed_pwm_l = PidLocCtrl(&speed_pid_l,
+                                     speed_target - speed_real_l, 1.0f);
+            speed_pwm_r = PidLocCtrl(&speed_pid_r,
+                                     speed_target - speed_real_r, 1.0f);
+
+            pwm_set_duty(MOTOR1_PWM, (uint32)MAX(speed_pwm_l, 0.0f));
+            pwm_set_duty(MOTOR2_PWM, (uint32)MAX(speed_pwm_r, 0.0f));
+        }
+        else
+        {
+            speed_pwm_l = 0.0f;
+            speed_pwm_r = 0.0f;
+            Pid_Reset(&speed_pid_l);
+            Pid_Reset(&speed_pid_r);
+            pwm_set_duty(MOTOR1_PWM, 0);
+            pwm_set_duty(MOTOR2_PWM, 0);
+        }
+
         gpio_set_level(MOTOR1_DIR, MOTOR1_FORWARD_DIR_LEVEL);
-        // 编码器值即为速度值
-        speed_real = encoder_data_2;
-        // PID更新 
-        speed_pwm = PidLocCtrl(&speed_pid_r, speed_target - speed_real, 1.f);
-        // 只考虑一个方向转动
-        pwm_set_duty(MOTOR2_PWM, MAX(speed_pwm, 0));
         gpio_set_level(MOTOR2_DIR, MOTOR2_FORWARD_DIR_LEVEL);
 
         pit_flag_clear(PIT_CH0);

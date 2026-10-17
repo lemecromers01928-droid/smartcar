@@ -3,10 +3,12 @@
 
 // 电机PID初始化参数
 float speed_KP = RACE_SPEED_KP, speed_KI = RACE_SPEED_KI, speed_KD = RACE_SPEED_KD;
-float speed_IMAX = 5000.0, speed_OUTMAX = 5000.0;
-float speed_target = RACE_SPEED_TARGET_STRAIGHT;
-float speed_real = 0.0;
-float speed_pwm = 0.0;
+float speed_IMAX = 5000.0f, speed_OUTMAX = 3000.0f;
+volatile float speed_target = 0.0f;
+volatile float speed_real_l = 0.0f;
+volatile float speed_real_r = 0.0f;
+volatile float speed_pwm_l = 0.0f;
+volatile float speed_pwm_r = 0.0f;
 
 pid_param_t speed_pid_l;  // 电机PID
 pid_param_t speed_pid_r;  // 电机PID
@@ -47,6 +49,17 @@ void Pid_Param_Init(pid_param_t * pid, float kp, float ki, float kd, float imax,
     pid->last_t    = 0;
 }
 
+void Pid_Reset(pid_param_t * pid)
+{
+    pid->out_p = 0.0f;
+    pid->out_i = 0.0f;
+    pid->out_d = 0.0f;
+    pid->out = 0.0f;
+    pid->integrator = 0.0f;
+    pid->last_error = 0.0f;
+    pid->last_derivative = 0.0f;
+}
+
 /*******************************************************************************
 * 函 数 名         : PidLocCtrl
 * 函数功能	   : 位置式PID控制
@@ -55,16 +68,17 @@ void Pid_Param_Init(pid_param_t * pid, float kp, float ki, float kd, float imax,
 *******************************************************************************/
 float PidLocCtrl(pid_param_t * pid, float error, float t)
 {
-    /* 累积误差 */
-    pid->integrator += error;
+    if (t <= 0.0f)
+    {
+        return 0.0f;
+    }
 
-    /* 误差限幅 */
-    pid->out_i = constrain_float(pid->integrator, -pid->imax, pid->imax);
-
-
+    /* Clamp the accumulator itself; otherwise the old code could wind up. */
+    pid->integrator = constrain_float(pid->integrator + error * t,
+                                      -pid->imax, pid->imax);
     pid->out_p = pid->kp * error;
-    pid->out_i = pid->ki * t * pid->integrator;
-    pid->out_d = pid->kd/t * (error - pid->last_error);
+    pid->out_i = pid->ki * pid->integrator;
+    pid->out_d = pid->kd / t * (error - pid->last_error);
 
     pid->last_error = error;
 

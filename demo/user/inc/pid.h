@@ -25,13 +25,16 @@ typedef struct
 extern pid_param_t speed_pid_l;  // 电机PID
 extern pid_param_t speed_pid_r;  // 电机PID
 extern float speed_KP, speed_KI,speed_KD, speed_IMAX, speed_OUTMAX;
-extern float speed_target;                      // 目标速度
-extern float speed_real;                        // 实际速度
-extern float speed_pwm;                         // 施加在电机上的PWM占空比
+extern volatile float speed_target;             // 目标速度
+extern volatile float speed_real_l;             // 左轮实际速度
+extern volatile float speed_real_r;             // 右轮实际速度
+extern volatile float speed_pwm_l;              // 左轮PWM占空比
+extern volatile float speed_pwm_r;              // 右轮PWM占空比
 
 
 void My_Pid_Init(void);
 void Pid_Param_Init(pid_param_t * pid, float kp, float ki, float kd, float imax, float outmax);
+void Pid_Reset(pid_param_t * pid);
 
 float constrain_float(float amt, float low, float high);
 short constrain_short(short amt, short low, short high);
